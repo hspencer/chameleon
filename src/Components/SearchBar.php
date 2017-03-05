@@ -66,8 +66,7 @@ class SearchBar extends Component {
 			$this->indent() . '<div class="input-group">' .
 			$this->indent( 1 ) . $this->getSkinTemplate()->makeSearchInput( array( 'id' => IdRegistry::getRegistry()->getId( 'searchInput' ), 'type' => 'text', 'class' => 'form-control' ) ) .
 			$this->indent() . '<div class="input-group-btn">' .
-			$this->indent( 1 ) . $this->getSearchButton( 'go' ) .
-			$this->indent( 0 ) . $this->getSearchButton( 'fulltext' ) .
+			$this->indent( 1 ) . $this->getSearchButton() .
 			$this->indent( -1 ) . '</div>' .
 			$this->indent( -1 ) . '</div>' .
 			$this->indent( -1 ) . '</form>' .
@@ -84,39 +83,21 @@ class SearchBar extends Component {
 	 *
 	 * @return string
 	 */
-	private function getSearchButton( $mode = 'fulltext' ) {
+	private function getSearchButton() {
 
-		if ( $mode === 'go' ) {
-
-			$buttonAttrs = array(
+		$buttonAttrs = array_merge(
+			array(
 				'value' => $this->getSkinTemplate()->translator->translate( 'searcharticle' ),
 				'id'    => IdRegistry::getRegistry()->getId( 'searchGoButton' ),
 				'name'  => 'go',
-			);
-
-			$glyphicon = 'share-alt';
-
-		} else {
-
-			$buttonAttrs = array(
-				'value' => $this->getSkinTemplate()->translator->translate( 'searchbutton' ),
-				'id'    => IdRegistry::getRegistry()->getId( 'mw-searchButton' ),
-				'name'  => 'fulltext',
-			);
-
-			$glyphicon = 'search';
-		}
-
-		$buttonAttrs = array_merge(
-			$buttonAttrs,
-			Linker::tooltipAndAccesskeyAttribs( "search-$mode" ),
-			array(
-				 'type'  => 'submit',
-				 'class' => $buttonAttrs[ 'id' ] . ' btn btn-default'
-			)
+				'type'  => 'submit',
+				'class' => 'searchGoButton btn btn-secondary',
+				'aria-label' => $this->getSkinTemplate()->getMsg( 'chameleon-search-aria-label' )->text()
+			),
+			Linker::tooltipAndAccesskeyAttribs( 'search-go' )
 		);
 
-		return \Html::rawElement( 'button', $buttonAttrs, '<span class="glyphicon glyphicon-' . $glyphicon . '"></span>' );
+		return \Html::rawElement( 'button', $buttonAttrs, '<i class="fa fa-search" aria-hidden="true"></i>' );
 	}
 
 }

@@ -62,12 +62,12 @@ class NavMenu extends Component {
 			$flatten = array();
 		}
 
-		// create a dropdown for each sidebar box
+		// create html for each sidebar box
 		foreach ( $sidebar as $menuName => $menuDescription ) {
-			$ret .= $this->getDropdownForNavMenu( $menuName, $menuDescription, array_search( $menuName, $flatten ) !== false );
+			$ret .= $this->getHtmlForSubMenu( $menuName, $menuDescription, array_search( $menuName, $flatten ) !== false );
 		}
 
-		return $ret;
+		return '<ul class="navbar-nav">' . $ret . "</ul>\n";
 	}
 
 	/**
@@ -87,31 +87,28 @@ class NavMenu extends Component {
 	/**
 	 * Create a single dropdown
 	 *
-	 * @param string  $menuName
+	 * @param string $menuName
 	 * @param mixed[] $menuDescription
-	 * @param bool    $flatten
+	 * @param bool $flatten
 	 *
 	 * @return string
 	 */
-	protected function getDropdownForNavMenu( $menuName, $menuDescription, $flatten = false ) {
+	protected function getHtmlForSubMenu( $menuName, $menuDescription, $flatten = false ) {
 
 		// open list item containing the dropdown
 		$ret = $this->indent() . '<!-- ' . $menuName . ' -->';
 
 		if ( $flatten ) {
 
-			$ret .= $this->buildMenuItemsForDropdownMenu( $menuDescription );
+			$ret .= $this->getHtmlForFlatMenu( $menuDescription );
 
 		} elseif ( !$this->hasSubmenuItems( $menuDescription ) ) {
 
-			$ret .= $this->buildDropdownMenuStub( $menuDescription );
+			$ret .= $this->getHtmlForDropdownMenuStub( $menuDescription );
 
 		} else {
 
-			$ret .= $this->buildDropdownOpeningTags( $menuDescription )
-				. $this->buildMenuItemsForDropdownMenu( $menuDescription, 2 )
-				. $this->buildDropdownClosingTags();
-
+			$ret .= $this->getHtmlForDropdownMenu( $menuDescription );
 
 		}
 
@@ -120,11 +117,12 @@ class NavMenu extends Component {
 
 	/**
 	 * @param mixed[] $menuDescription
-	 * @param int     $indent
+	 * @param int $indent
 	 *
+	 * @param callable $buildSingleMenuItem
 	 * @return string
 	 */
-	protected function buildMenuItemsForDropdownMenu( $menuDescription, $indent = 0 ) {
+	protected function buildMenuItems( $menuDescription, $indent = 0, callable $buildSingleMenuItem = null ) {
 
 		// build the list of submenu items
 		if ( $this->hasSubmenuItems( $menuDescription ) ) {
@@ -133,7 +131,8 @@ class NavMenu extends Component {
 			$this->indent( $indent );
 
 			foreach ( $menuDescription[ 'content' ] as $key => $item ) {
-				$menuitems .= $this->indent() . $this->getSkinTemplate()->makeListItem( $key, $item );
+				$item[ 'class' ] = '';
+				$menuitems .= $buildSingleMenuItem( $item, $key );
 			}
 
 			$this->indent( -$indent );
@@ -142,6 +141,40 @@ class NavMenu extends Component {
 		} else {
 			return $this->indent() . '<!-- empty -->';
 		}
+	}
+
+	/**
+	 * @param mixed[] $menuDescription
+	 * @param int $indent
+	 *
+	 * @return string
+	 */
+	protected function getHtmlForFlatMenu( $menuDescription, $indent = 0 ) {
+
+		return $this->buildMenuItems( $menuDescription, $indent, function ( $item, $key ) {
+
+			$item[ 'class' ] .= ' nav-item';
+			$item[ 'link-class' ] = 'nav-link';
+			return $this->indent() . $this->getSkinTemplate()->makeListItem( $key, $item );
+
+		} );
+	}
+
+	/**
+	 * @param $menuDescription
+	 * @return string
+	 */
+	protected function getHtmlForDropdownMenu( $menuDescription ) {
+		return $this->buildDropdownOpeningTags( $menuDescription )
+
+			. $this->buildMenuItems( $menuDescription, 2, function ( $item, $key ) {
+
+				$item[ 'class' ] .= ' dropdown-item';
+				return $this->indent() . $this->getSkinTemplate()->makeLink( $key, $item );
+
+			} )
+
+			. $this->buildDropdownClosingTags();
 	}
 
 	/**
@@ -158,14 +191,14 @@ class NavMenu extends Component {
 	 *
 	 * @return string
 	 */
-	protected function buildDropdownMenuStub( $menuDescription ) {
+	protected function getHtmlForDropdownMenuStub( $menuDescription ) {
 		return
 			$this->indent() . \Html::rawElement( 'li',
 				array(
-					'class' => '',
+					'class' => 'nav-item',
 					'title' => Linker::titleAttrib( $menuDescription[ 'id' ] )
 				),
-				'<a href="#">' . htmlspecialchars( $menuDescription[ 'header' ] ) . '</a>'
+				'<a href="#" class="nav-link">' . htmlspecialchars( $menuDescription[ 'header' ] ) . '</a>'
 			);
 	}
 
@@ -178,18 +211,18 @@ class NavMenu extends Component {
 		// open list item containing the dropdown
 		$ret = $this->indent() . \Html::openElement( 'li',
 				array(
-					'class' => 'dropdown',
+					'class' => 'nav-item dropdown',
 					'title' => Linker::titleAttrib( $menuDescription[ 'id' ] )
 				)
 			);
 
 		// add the dropdown toggle
-		$ret .= $this->indent( 1 ) . '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' .
-			htmlspecialchars( $menuDescription[ 'header' ] ) . ' <b class="caret"></b></a>';
+		$ret .= $this->indent( 1 ) . '<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">' .
+			htmlspecialchars( $menuDescription[ 'header' ] ) . '</a>';
 
 		// open list of dropdown menu items
 		$ret .= $this->indent() .
-			$this->indent() . \Html::openElement( 'ul',
+			$this->indent() . \Html::openElement( 'div',
 				array(
 					'class' => 'dropdown-menu ' . $menuDescription[ 'id' ],
 					'id'    => IdRegistry::getRegistry()->getId( $menuDescription[ 'id' ] ),
@@ -203,7 +236,7 @@ class NavMenu extends Component {
 	 */
 	protected function buildDropdownClosingTags() {
 		return
-			$this->indent() . '</ul>' .
+			$this->indent() . '</div>' .
 			$this->indent( -1 ) . '</li>';
 	}
 

@@ -146,7 +146,7 @@ class GenericComponentTestCase extends \PHPUnit_Framework_TestCase {
 	protected function getDomElementsFromFile( $file ) {
 		$elementFinder = new DocumentElementFinder( $file );
 		$componentName = $this->getNameOfComponentUnderTest();
-		$componentName = end( (array_values( explode( '\\', $componentName ) )) );
+		$componentName = substr( $componentName, strripos( $componentName, '\\' ) );
 		return $elementFinder->getComponentsByTypeAttribute( $componentName );
 	}
 

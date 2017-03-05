@@ -111,14 +111,11 @@ class NavbarHorizontal extends Component {
 		$openingTags =
 			$this->indent() . '<!-- navigation bar -->' .
 			$this->indent() . \Html::openElement( 'nav', array(
-					'class' => 'navbar navbar-default p-navbar ' . $this->getClassString(),
+					'class' => 'mw-navigation p-navbar navbar navbar-toggleable-md navbar-light bg-faded ' . $this->getClassString(),
 					'role'  => 'navigation',
 					'id'    => $this->getHtmlId()
 				)
-			) .
-			$this->indent( 1 ) . '<div class="container-fluid">';
-
-		$this->indent( 1 );
+			);
 
 		return $openingTags;
 	}
@@ -140,19 +137,9 @@ class NavbarHorizontal extends Component {
 
 		$elements = $this->buildNavBarElementsFromDomTree();
 
-		if ( !empty( $elements[ 'right' ] ) ) {
-
-			$elements[ 'left' ][ ] =
-				$this->indent( 1 ) . '<div class="navbar-right-aligned">' .
-				implode( $elements[ 'right' ] ) .
-				$this->indent() . '</div> <!-- navbar-right-aligned -->';
-
-			$this->indent( -1 );
-		}
-
 		return
 			$this->buildHead( $elements[ 'head' ] ) .
-			$this->buildTail( $elements[ 'left' ] );
+			$this->buildTail( $elements[ 'left' ], $elements['right'] );
 	}
 
 	/**
@@ -210,6 +197,8 @@ class NavbarHorizontal extends Component {
 	 */
 	protected function buildNavBarElementFromDomElement( $node ) {
 
+		$html = '';
+
 		switch ( $node->getAttribute( 'type' ) ) {
 			case 'Logo':
 				$html = $this->getLogo( $node );
@@ -224,7 +213,7 @@ class NavbarHorizontal extends Component {
 				$html = $this->getSearchBar( $node );
 				break;
 			case 'PersonalTools':
-				$html = $this->getPersonalTools();
+//				$html = $this->getPersonalTools();
 				break;
 			case 'Menu':
 				$html = $this->getMenu( $node );
@@ -256,7 +245,7 @@ class NavbarHorizontal extends Component {
 	protected function getLogo( \DOMElement $domElement = null ) {
 
 		$logo = new Logo( $this->getSkinTemplate(), $domElement, $this->getIndent() );
-		$logo->addClasses( 'navbar-brand' );
+		$logo->addClasses( 'navbar-brand my-0 py-0' );
 
 		return $logo->getHtml();
 	}
@@ -272,7 +261,7 @@ class NavbarHorizontal extends Component {
 
 		$navMenu = new NavMenu( $this->getSkinTemplate(), $domElement, $this->getIndent() );
 
-		return '<ul class="nav navbar-nav">' . $navMenu->getHtml() . "</ul>\n";
+		return  $navMenu->getHtml();
 
 	}
 
@@ -301,7 +290,7 @@ class NavbarHorizontal extends Component {
 		if ( $editLinkHtml || $pageToolsHtml ) {
 			$ret =
 				$this->indent() . '<!-- page tools -->' .
-				$this->indent() . '<ul class="navbar-tools navbar-nav" >';
+				$this->indent() . '<div class="navbar-tools d-flex navbar-nav" >';
 
 			if ( $editLinkHtml !== '' ) {
 				$ret .= $this->indent( 1 ) . $editLinkHtml;
@@ -309,14 +298,14 @@ class NavbarHorizontal extends Component {
 
 			if ( $pageToolsHtml !== '' ) {
 				$ret .=
-					$this->indent( 1 ) . '<li class="navbar-tools-tools dropdown">' .
-					$this->indent( 1 ) . '<a data-toggle="dropdown" class="dropdown-toggle" href="#" title="' . $this->getSkinTemplate()->getMsg( 'specialpages-group-pagetools' )->text() . '" ><span>...</span></a>' .
+					$this->indent( 1 ) . '<div class="navbar-tools-tools nav-item dropdown">' .
+					$this->indent( 1 ) . '<a data-toggle="dropdown" class="nav-link" href="#" title="' . $this->getSkinTemplate()->getMsg( 'specialpages-group-pagetools' )->text() . '" ><span>...</span></a>' .
 					$pageToolsHtml .
-					$this->indent( -1 ) . '</li>';
+					$this->indent( -1 ) . '</div>';
 			}
 
 			$ret .=
-				$this->indent( -1 ) . '</ul>' . "\n";
+				$this->indent( -1 ) . '</div>' . "\n";
 		}
 
 		return $ret;
@@ -330,7 +319,7 @@ class NavbarHorizontal extends Component {
 	protected function getSearchBar( \DOMElement $domElement = null ) {
 
 		$search = new SearchBar( $this->getSkinTemplate(), $domElement, $this->getIndent() );
-		$search->addClasses( 'navbar-form' );
+		$search->addClasses( 'form-inline' );
 
 		return $search->getHtml();
 	}
@@ -433,11 +422,11 @@ class NavbarHorizontal extends Component {
 	protected function buildHead( $headElements ) {
 
 		$head =
-			$this->indent() . "<div class=\"navbar-header\">\n" .
-			$this->indent( 1 ) . "<button type=\"button\" class=\"navbar-toggle collapsed\" data-toggle=\"collapse\" data-target=\"#" . $this->getHtmlId() . "-collapse\">" .
-			$this->indent( 1 ) . "<span class=\"sr-only\">Toggle navigation</span>" .
-			$this->indent() . str_repeat( "<span class=\"icon-bar\"></span>", 3 ) .
+			$this->indent( 1 ) . "<button type=\"button\" class=\"navbar-toggler navbar-toggler-right\" data-toggle=\"collapse\" data-target=\"#" . $this->getHtmlId() . "-collapse\">" .
+			$this->indent( 1 ) . "<span class=\"navbar-toggler-icon\"></span>" .
 			$this->indent( -1 ) . "</button>\n" .
+
+			$this->indent( 1 ) . "<div class=\"navbar-head\">" .
 			implode( '', $headElements ) . "\n" .
 			$this->indent( -1 ) . "</div>\n";
 
@@ -445,15 +434,19 @@ class NavbarHorizontal extends Component {
 	}
 
 	/**
-	 * @param string[] $tailElements
-	 *
+	 * @param string[] $leftSideElements
+	 * @param string[] $rightSideElements
 	 * @return string
+	 *
 	 */
-	protected function buildTail( $tailElements ) {
+	protected function buildTail( $leftSideElements = [], $rightSideElements = [] ) {
 
 		return
 			$this->indent() . '<div class="collapse navbar-collapse" id="' . $this->getHtmlId() . '-collapse">' .
-			implode( '', $tailElements ) .
+			implode( '', $leftSideElements ) .
+			$this->indent( 1 ) . '<div class="ml-auto"></div>' .
+			implode( $rightSideElements ) .
+			$this->indent( -1 ) . '<!-- navbar-right-aligned -->' .
 			$this->indent() . '</div><!-- /.navbar-collapse -->';
 	}
 
@@ -462,37 +455,36 @@ class NavbarHorizontal extends Component {
 	 */
 	protected function buildNavBarClosingTags() {
 		return
-			$this->indent( -1 ) . '</div>' .
 			$this->indent( -1 ) . '</nav>' . "\n";
 	}
 
 	/**
-	 * @param $pageTools
+	 * @param PageTools $pageTools
 	 * @param $editActionId
 	 *
 	 * @return string
 	 */
-	protected function getLinkAndRemoveFromPageToolStructure( $pageTools, $editActionId ) {
+	protected function getLinkAndRemoveFromPageToolStructure( PageTools $pageTools, $editActionId ) {
 
 		$pageToolsStructure  = $pageTools->getPageToolsStructure();
 		$editActionStructure = $pageToolsStructure[ 'views' ][ $editActionId ];
 
-		$editActionStructure[ 'text' ] = '';
 
-		if ( array_key_exists( 'class', $editActionStructure ) ) {
-			$editActionStructure[ 'class' ] .= ' navbar-tools-tools';
-		} else {
-			$editActionStructure[ 'class' ] = 'navbar-tools-tools';
+		if ( ! array_key_exists( 'class', $editActionStructure ) ) {
+			$editActionStructure[ 'class' ] = '';
 		}
+
+		$editActionStructure[ 'class' ] .= ' navbar-tools-tools nav-link';
+		$editActionStructure[ 'text' ] = '';
 
 		$options = array (
 			'text-wrapper' => array(
-				'tag' => 'span',
-				'attributes' => array('class' => 'glyphicon glyphicon-pencil',)
+				'tag' => 'i',
+				'attributes' => array('class' => 'fa fa-pencil',)
 			),
 		);
 
-		$editLinkHtml = $this->getSkinTemplate()->makeListItem(
+		$editLinkHtml = $this->getSkinTemplate()->makeLink(
 			$editActionId,
 			$editActionStructure,
 			$options
@@ -504,49 +496,74 @@ class NavbarHorizontal extends Component {
 	}
 
 	/**
-	 * @param $pageTools
+	 * @param PageTools $pageTools
 	 * @return string
 	 */
-	protected function getEditLinkHtml( $pageTools ) {
+	protected function getEditLinkHtml( PageTools $pageTools ) {
 
 		$pageToolsStructure = $pageTools->getPageToolsStructure();
 
-		if ( array_key_exists( 'views', $pageToolsStructure ) &&
-			array_key_exists( 'sfgRenameEditTabs', $GLOBALS ) &&
-			array_key_exists( 'formedit', $pageToolsStructure[ 'views' ] ) && // SemanticForms 3.5+
-			$GLOBALS[ 'sfgRenameEditTabs' ] === true
-
-		) {
-
-			$editLinkHtml = $this->getLinkAndRemoveFromPageToolStructure( $pageTools, 'formedit' );
-			return $editLinkHtml;
-
-		} elseif ( array_key_exists( 'views', $pageToolsStructure ) &&
-			array_key_exists( 'sfgRenameEditTabs', $GLOBALS ) &&
-			array_key_exists( 'form_edit', $pageToolsStructure[ 'views' ] ) && // SemanticForms <3.5
-			$GLOBALS[ 'sfgRenameEditTabs' ] === true
-
-		) {
-
-			$editLinkHtml = $this->getLinkAndRemoveFromPageToolStructure( $pageTools, 'form_edit' );
-			return $editLinkHtml;
-
-		} elseif ( array_key_exists( 'views', $pageToolsStructure ) &&
-			array_key_exists( 've-edit', $pageToolsStructure[ 'views' ] )
-		) {
-
-			$editLinkHtml = $this->getLinkAndRemoveFromPageToolStructure( $pageTools, 've-edit' );
-			return $editLinkHtml;
-
-		} elseif ( array_key_exists( 'views', $pageToolsStructure ) &&
-			array_key_exists( 'edit', $pageToolsStructure[ 'views' ] )
-		) {
-
-			$editLinkHtml = $this->getLinkAndRemoveFromPageToolStructure( $pageTools, 'edit' );
-			return $editLinkHtml;
-
+		if ( $this->isPageFormsInstalled( $pageToolsStructure ) ) {
+			return $this->getLinkAndRemoveFromPageToolStructure( $pageTools, 'formedit' );
 		}
+
+		if ( $this->isSemanticFormsInstalled( $pageToolsStructure ) ) {
+			return $this->getLinkAndRemoveFromPageToolStructure( $pageTools, 'form_edit' );
+		}
+
+		if ( $this->isVisualEditorInstalled( $pageToolsStructure ) ) {
+			return $this->getLinkAndRemoveFromPageToolStructure( $pageTools, 've-edit' );
+		}
+
+		if ( $this->isPageEditable( $pageToolsStructure )	) {
+			return $this->getLinkAndRemoveFromPageToolStructure( $pageTools, 'edit' );
+		}
+
 		return '';
+	}
+
+	/**
+	 * @param $pageToolsStructure
+	 * @return bool
+	 */
+	protected function isPageFormsInstalled( $pageToolsStructure ) {
+		return
+			array_key_exists( 'views', $pageToolsStructure ) &&
+			array_key_exists( 'formedit', $pageToolsStructure[ 'views' ] ) && // SemanticForms 3.5+
+			array_key_exists( 'sfgRenameEditTabs', $GLOBALS ) &&
+			$GLOBALS[ 'sfgRenameEditTabs' ] === true;
+	}
+
+	/**
+	 * @param $pageToolsStructure
+	 * @return bool
+	 */
+	protected function isSemanticFormsInstalled( $pageToolsStructure ) {
+		return
+			array_key_exists( 'views', $pageToolsStructure ) &&
+			array_key_exists( 'form_edit', $pageToolsStructure[ 'views' ] ) && // SemanticForms <3.5
+			array_key_exists( 'sfgRenameEditTabs', $GLOBALS ) &&
+			$GLOBALS[ 'sfgRenameEditTabs' ] === true;
+	}
+
+	/**
+	 * @param $pageToolsStructure
+	 * @return bool
+	 */
+	protected function isVisualEditorInstalled( $pageToolsStructure ) {
+		return
+			array_key_exists( 'views', $pageToolsStructure ) &&
+			array_key_exists( 've-edit', $pageToolsStructure[ 'views' ] );
+	}
+
+	/**
+	 * @param $pageToolsStructure
+	 * @return bool
+	 */
+	protected function isPageEditable( $pageToolsStructure ) {
+		return
+			array_key_exists( 'views', $pageToolsStructure ) &&
+			array_key_exists( 'edit', $pageToolsStructure[ 'views' ] );
 	}
 
 }

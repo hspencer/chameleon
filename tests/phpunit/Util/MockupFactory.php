@@ -243,6 +243,8 @@ class MockupFactory {
 			->method( 'getRequest' )
 			->will( $this->testCase->returnValue( $request ) );
 
+		//FIXME: add getComponentFactory() to skin stub
+
 		return $skin;
 	}
 

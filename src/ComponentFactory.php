@@ -240,7 +240,7 @@ class ComponentFactory {
 
 			if ( $parent->hasAttribute( 'type' ) ) {
 
-				$fullClassName = join( '\\', [ self::NAMESPACE_HIERARCHY, $parent->getAttribute( 'type' ), $className ] );
+				$fullClassName = join( '\\', array( self::NAMESPACE_HIERARCHY, $parent->getAttribute( 'type' ), $className ) );
 
 				if ( class_exists( $fullClassName ) ) {
 
@@ -248,7 +248,7 @@ class ComponentFactory {
 				}
 			}
 
-			return join( '\\', [ self::NAMESPACE_HIERARCHY, $className ] );
+			return join( '\\', array( self::NAMESPACE_HIERARCHY, $className ) );
 
 		}
 

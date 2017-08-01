@@ -223,7 +223,7 @@ class ComponentFactory {
 	 * @return string
 	 */
 	public function sanitizeFileName( $fileName ) {
-		return str_replace( [ '\\', '/' ], DIRECTORY_SEPARATOR, $fileName );
+		return str_replace( array( '\\', '/' ), DIRECTORY_SEPARATOR, $fileName );
 	}
 
 	/**

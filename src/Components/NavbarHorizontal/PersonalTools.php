@@ -26,6 +26,7 @@
 
 namespace Skins\Chameleon\Components\NavbarHorizontal;
 
+use Hooks;
 use Skins\Chameleon\Components\Component;
 
 /**
